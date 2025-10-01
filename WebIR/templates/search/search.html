@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FlickFind</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #0b0f17; 
+      color: #e5e7eb; 
+      margin: 20px;
+    }
+    .movie {
+      display: flex;
+      align-items: flex-start;
+      margin: 15px 0;
+      padding: 15px;
+      background: #121826;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+    .poster img {
+      width: 120px;
+      border-radius: 4px;
+    }
+    .info {
+      margin-left: 15px;
+      flex: 1;
+    }
+    .title {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin: 0 0 5px;
+      color: #60a5fa;
+    }
+    .meta {
+      font-size: 0.9em;
+      color: #9aa4b2;
+      margin-bottom: 8px;
+    }
+    .overview {
+      font-size: 0.95em;
+      line-height: 1.4;
+      max-height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      /* สำหรับเบราว์เซอร์ใหม่ ๆ */
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+
+      /* สำหรับอนาคต (มาตรฐานกลาง) */
+      line-clamp: 3;
+    }
+    h1 { color: #fff; }
+    input, button {
+      padding: 8px;
+      border-radius: 4px;
+      border: none;
+      margin-right: 5px;
+    }
+    button {
+      background: #60a5fa;
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #3b82f6;
+    }
+  </style>
+</head>
+<body>
+<h1 style="text-align:center;">
+  <a href="/" style="color:white; text-decoration:none;">FlickFind</a>
+</h1>
+
+<form method="get" style="text-align:center; margin-bottom:20px;">
+  <input 
+    type="text" 
+    name="q" 
+    value="{{ query|default:'' }}" 
+    placeholder="Search movies or TV shows..." 
+    style="width: 400px; padding: 10px; border-radius: 6px; border: none; font-size: 1em;"
+  />
+
+  <!-- ตัวกรอง -->
+  <label style="margin-left:10px;">
+    <input type="radio" name="type" value="movie" {% if type == "movie" %}checked{% endif %}> Movies
+  </label>
+  <label>
+    <input type="radio" name="type" value="tv" {% if type == "tv" %}checked{% endif %}> TV Shows
+  </label>
+  <label>
+    <input type="radio" name="type" value="all" {% if type == "all" or not type %}checked{% endif %}> All
+  </label>
+
+  <button 
+    type="submit" 
+    style="padding: 10px 20px; border-radius: 6px; background:#60a5fa; color:#fff; font-size:1em; border:none; cursor:pointer;"
+  >
+    Search
+  </button>
+</form>
+
+
+  {% if results %}
+    {% if query %}
+    <h2>Results for "{{ query }}"</h2>
+      {% else %}
+       <h2>หนังใหม่ / หนังที่กำลังฉาย</h2>   
+  {% endif %}
+  {% for movie in results %}
+  <div class="movie">
+    <div class="poster">
+      {% if movie.poster_path %}
+        <img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}" alt="{{ movie.display_title }}">
+      {% else %}
+        <img src="https://via.placeholder.com/120x180?text=No+Image" alt="No Poster">
+      {% endif %}
+    </div>
+    <div class="info">
+      <div class="title">
+        <!-- ✅ เปลี่ยนชื่อเป็นลิงก์ -->
+        <a href="https://www.themoviedb.org/{% if movie.media_type == 'Movie' %}movie{% else %}tv{% endif %}/{{ movie.id }}"
+           target="_blank"
+           style="color:#60a5fa; text-decoration:none;">
+          {{ movie.display_title }}
+        </a>
+        <span style="font-size:0.8em; color:#9aa4b2;">({{ movie.media_type }})</span>
+      </div>
+      <div class="meta">
+        Release date: ({{ movie.display_date }}) ⭐ {{ movie.vote_average }} <br>
+        Genres: {{ movie.genres|join:", " }}
+      </div>
+      <div class="overview">{{ movie.overview }}</div>
+    </div>
+  </div>
+{% endfor %}
+
+
+ <div class="pagination" style="margin-top:20px; text-align:center;">
+  {% if page_obj.has_previous %}
+    <a href="?q={{ query }}&type={{ type }}&page={{ page_obj.previous_page_number }}">« Prev</a>
+  {% endif %}
+
+  {% for num in page_obj.paginator.page_range %}
+    {% if num == page_obj.number %}
+      <strong>[{{ num }}]</strong>   {# หน้าปัจจุบันเป็นตัวหนา #}
+    {% elif num >= page_obj.number|add:-2 and num <= page_obj.number|add:2 %}
+      <a href="?q={{ query }}&type={{ type }}&page={{ num }}">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+    <a href="?q={{ query }}&type={{ type }}&page={{ page_obj.next_page_number }}">Next »</a>
+  {% endif %}
+</div>
+
+
+  {% elif query %}
+    <p>No results found for "{{ query }}"</p>
+  {% endif %}
+</body>
+</html>
