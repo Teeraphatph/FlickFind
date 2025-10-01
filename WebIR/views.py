@@ -27,7 +27,7 @@ def search_movies(request):
     page_number = request.GET.get("page", 1)
     results = []
 
-    if query:   # ✅ ถ้ามีการค้นหา
+    if query:   # ถ้ามีการค้นหา
         endpoints = []
         if filter_type == "movie":
             endpoints = ["movie"]
@@ -41,13 +41,13 @@ def search_movies(request):
             response = requests.get(url)
             if response.status_code == 200:
                 results += response.json().get("results", [])
-    else:       # ✅ ถ้ายังไม่ค้นหา → โชว์หนังใหม่/ยอดนิยม
+    else:       # ถ้ายังไม่ค้นหา → โชว์หนังใหม่/ยอดนิยม
         url = f"{BASE_URL}/movie/now_playing?api_key={API_KEY}&language=th-TH"
         response = requests.get(url)
         if response.status_code == 200:
             results = response.json().get("results", [])
 
-    # ✅ จัดการชื่อ, วันที่, ประเภท, genres (ใช้ได้ทั้งตอนค้นหาและไม่ค้นหา)
+    # จัดการชื่อ, วันที่, ประเภท, genres (ใช้ได้ทั้งตอนค้นหาและไม่ค้นหา)
     for item in results:
         item["display_title"] = (
             item.get("title") 
@@ -74,6 +74,7 @@ def search_movies(request):
             item["genres"] = ["No genres available"]
 
         if not item.get("overview"):
+            
         # ดึงข้อมูลรายละเอียดเรื่องนั้นแบบ language=en-US
             fallback_url = f"{BASE_URL}/{ 'movie' if item['media_type']=='Movie' else 'tv' }/{item['id']}?api_key={API_KEY}&language=en-US"
             res_fallback = requests.get(fallback_url)
@@ -82,7 +83,7 @@ def search_movies(request):
             else:
                 item["overview"] = "(No overview available)"
 
-    # ✅ เรียงคะแนนมาก → น้อย
+    # เรียงคะแนนมาก → น้อย
     results = sorted(results, key=lambda x: x.get("vote_average", 0), reverse=True)
 
     paginator = Paginator(results, 20)  
