@@ -1,1 +1,1 @@
-web: gunicorn Projectwebir.wsgi
+web: gunicorn Projectwebir.wsgi:application
